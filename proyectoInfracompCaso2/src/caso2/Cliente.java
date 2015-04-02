@@ -15,4 +15,18 @@ public class Cliente {
 	public final static String CERTSRV = "CERTSRV";
 	public final static String INIT = "INIT";
 
+	//Algoritmos para tareas de cifrado
+	
+	//Simetricos
+	private final static String DES = "DES";
+	private final static String AES = "AES";
+	private final static String Blowfish = "Blowsfish";
+	
+	//Asimetrico
+	private final static String RSA = "RSA";
+	
+	//DOHASH
+	private final static String HMACMD5 = "HMACMD5";
+	private final static String HMACSHA1 = "HMACSHA1";
+	private final static String HMACSHA256 = "HMACSHA256";
 }

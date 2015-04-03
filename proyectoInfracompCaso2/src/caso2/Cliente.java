@@ -1,12 +1,14 @@
 package caso2;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
 public class Cliente implements ICliente{
 
+	//Constantes
 	/**
 	 * Direccion del servidor a usar.
 	 */
@@ -88,7 +90,7 @@ public class Cliente implements ICliente{
 	private Socket socket;
 
 	/**
-	 * Writer par aenviar mensajes de control al servidor
+	 * Writer para enviar mensajes de control al servidor
 	 */
 	private PrintWriter out;
 
@@ -101,11 +103,12 @@ public class Cliente implements ICliente{
 	 * Reader para visualizar como se lleva a cabo el protocolo
 	 */
 	private BufferedReader sysIn;
+	
 	//Constructor
-	public Cliente() throws Exception{
+	public Cliente(int port) throws Exception{
 		try{
 
-			socket = new Socket(SERV, PORT);
+			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			sysIn = new BufferedReader(new InputStreamReader(System.in));
@@ -113,21 +116,35 @@ public class Cliente implements ICliente{
 		} catch(Exception e){ e.printStackTrace();}
 	}
 
-	@Override
+	/**
+	 * Se inicia la comunicacion con el servidor enviando la cadena de control "HOLA"
+	 */
 	public boolean establecerConexion() {
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			System.out.println("Cliente: " + HOLA);
+			 out.println(HOLA);
+			 System.out.println("Servidor: " + in.readLine());
+			 
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
 	}
+	
 	@Override
 	public boolean mandarAlgoritmos() {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
 	@Override
 	public byte[] envioCertificado() {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public boolean actualizarUbicacion() {
 		// TODO Auto-generated method stub
@@ -135,6 +152,13 @@ public class Cliente implements ICliente{
 	}
 
 	public static void main(String[] args){
-
+		Cliente cli = null;
+		try{
+		cli = new Cliente(PORT);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		cli.establecerConexion();
 	}
 }

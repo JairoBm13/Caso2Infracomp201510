@@ -335,7 +335,6 @@ public class Cliente implements ICliente {
 			byte[] certificadoServidor = certificado.getBytes();
 			
 			System.out.println(certificadoServidor);
-			System.out.println(certLlave[1]);
 			extraerLlavesimetrica(certLlave[1]);
 			//--------------------------------------
 		
@@ -361,6 +360,7 @@ public class Cliente implements ICliente {
 			byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSim);
 			byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
 			String llaveSimetrica = new String(decifrado);
+			System.out.println(1);
 			System.out.println("Clave original: " + llaveSimetrica);
 
 		}
@@ -395,6 +395,6 @@ public class Cliente implements ICliente {
 		}
 		cli.envioCertificado();
 		cli.recibirCertificadoServidor();
-//		cli.extraerLlavesimetrica(DES, 64);
+
 	}
 }

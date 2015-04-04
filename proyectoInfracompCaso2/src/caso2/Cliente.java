@@ -12,11 +12,15 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.x509.X509V1CertificateGenerator;
@@ -32,12 +36,12 @@ public class Cliente implements ICliente {
 	//------------------------------------------------
 	// Constantes
 	//------------------------------------------------
-	
+
 	/**
 	 * Direccion del servidor a usar.
 	 */
 	private final static String SERV = "infracomp.virtual.uniandes.edu.co";
-	
+
 	/**
 	 * Puerto servidor con seguridad
 	 */
@@ -98,17 +102,17 @@ public class Cliente implements ICliente {
 	//--------------------------------------------
 	// Simetricos
 	//--------------------------------------------
-	
+
 	/**
 	 * 
 	 */
 	private final static String DES = "DES";
-	
+
 	/**
 	 * 
 	 */
 	private final static String AES = "AES";
-	
+
 	/**
 	 * 
 	 */
@@ -117,7 +121,7 @@ public class Cliente implements ICliente {
 	//-------------------------------------------------
 	// Asimetrico
 	//-------------------------------------------------
-	
+
 	/**
 	 * 
 	 */
@@ -126,17 +130,17 @@ public class Cliente implements ICliente {
 	//-------------------------------------------------
 	// DOHASH
 	//-------------------------------------------------
-	
+
 	/**
 	 * 
 	 */
 	private final static String HMACMD5 = "HMACMD5";
-	
+
 	/**
 	 * 
 	 */
 	private final static String HMACSHA1 = "HMACSHA1";
-	
+
 	/**
 	 * 
 	 */
@@ -166,10 +170,15 @@ public class Cliente implements ICliente {
 	 */
 	private BufferedReader sysIn;
 
+	/**
+	 * Llaves privada y publica del cliente
+	 */
+	private KeyPair llavesCliente;
+
 	//-----------------------------------------------
 	// Constructor
 	//-----------------------------------------------
-	
+
 	/**
 	 * 
 	 * @param port
@@ -226,19 +235,24 @@ public class Cliente implements ICliente {
 		X509Certificate certificado = crearCertificado();
 		byte[] certByte;
 		try {
+
 			certByte = certificado.getEncoded();
 			out.println(CERCLNT);
 			System.out.println("Cliente: "+CERCLNT);
 			System.out.println(certByte);
 			socket.getOutputStream().write(certByte);
 			socket.getOutputStream().flush();	
+
 			return certByte;
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
+
+
+
 	/**
 	 * 
 	 * @return
@@ -247,9 +261,9 @@ public class Cliente implements ICliente {
 		Date startDate = new Date(System.currentTimeMillis());                
 		Date expiryDate = new Date(System.currentTimeMillis() + 30L * 365L * 24L * 60L * 60L * 1000L);
 		BigInteger serialNumber = new BigInteger("26");       
-		
-		KeyPair parDeLlaves = generarLlave();
-		PrivateKey caKey = parDeLlaves.getPrivate();              
+
+		KeyPair llavesCliente = generarLlave();
+		PrivateKey caKey = llavesCliente.getPrivate();              
 		X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
 		X500Principal  subjectName = new X500Principal("CN=Test V3 Certificate"); 
 		certGen.setSerialNumber(serialNumber);
@@ -257,8 +271,11 @@ public class Cliente implements ICliente {
 		certGen.setNotBefore(startDate);
 		certGen.setNotAfter(expiryDate);
 		certGen.setSubjectDN(subjectName);
-		certGen.setPublicKey(parDeLlaves.getPublic());
-		certGen.setSignatureAlgorithm("RSA"); 
+		certGen.setPublicKey(llavesCliente.getPublic());
+		certGen.setSignatureAlgorithm("MD5withRSA"); 
+
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
 		try {
 			X509Certificate cert = certGen.generate(caKey, "BC"); 
 			return cert;
@@ -267,7 +284,7 @@ public class Cliente implements ICliente {
 			return null;
 		}   
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -277,12 +294,71 @@ public class Cliente implements ICliente {
 		try {
 			generator = KeyPairGenerator.getInstance(RSA);
 			generator.initialize(1024);
-			KeyPair keyPair = generator.generateKeyPair();
-			return keyPair;
+			llavesCliente = generator.generateKeyPair();
+			return llavesCliente;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	/**
+	 * Se recibe el certificado del servidor
+	 * @return
+	 */
+	public byte[] recibirCertificadoServidor(){
+		try {
+			System.out.println("Servidor: " +  in.readLine());
+
+			byte[] buffy = new byte[1024];
+
+			while(socket.getInputStream().available() !=0){
+				socket.getInputStream().read(buffy);
+			}
+
+			System.out.println(buffy);
+			
+			// EN BUSCA DEL INIT
+			String hola = in.readLine();
+			while(!hola.contains(INIT)){
+				hola = in.readLine();
+				System.out.println(hola);
+			}
+			
+			//
+			
+			return buffy;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * Extrae la llave simetrica enviada por el servidor
+	 * @return
+	 */
+	public SecretKey extraerLlavesimetrica(String algoritm, int tamSim){
+		
+		try{
+			
+			byte[] llaveSimCifrada =  new byte[tamSim];
+			
+			while(socket.getInputStream().available() !=0){
+				socket.getInputStream().read(llaveSimCifrada);
+			}
+			
+			Cipher cipher = Cipher.getInstance(RSA);
+			cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
+			
+			byte[] decifrado = cipher.doFinal(llaveSimCifrada);
+			String llaveSimetrica = new String(decifrado);
+			System.out.println("clave original: " + llaveSimetrica);
+
+		}
+		catch(Exception e){ e.printStackTrace();}
+		return null;
 	}
 
 	/**
@@ -308,9 +384,10 @@ public class Cliente implements ICliente {
 		try {
 			cli.mandarAlgoritmos(DES, RSA, HMACMD5);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		cli.envioCertificado();
+		cli.recibirCertificadoServidor();
+//		cli.extraerLlavesimetrica(DES, 64);
 	}
 }

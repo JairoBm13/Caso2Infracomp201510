@@ -130,11 +130,20 @@ public class Cliente implements ICliente {
 			e.printStackTrace();
 			return false;
 		}
-
 		return true;
 	}
 
-
+	/**
+	 * 
+	 */
+	public boolean mandarAlgoritmos(String algos, String algoa, String algod) throws IOException {
+		out.write(ALGORITMOS+":"+algos+":"+RSA+":"+algod);
+		out.flush();
+		String respuesta = in.readLine();
+		String estado = respuesta.split(":")[1];
+		if(estado.equals(OK)){return true;}
+		else{return false;}
+	}
 
 	@Override
 	public byte[] envioCertificado() {
@@ -154,14 +163,6 @@ public class Cliente implements ICliente {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-
 		cli.establecerConexion();
-	}
-
-	@Override
-	public boolean mandarAlgoritmos(String algos, String algoa, String algod)
-			throws IOException {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

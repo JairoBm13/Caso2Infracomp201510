@@ -137,9 +137,10 @@ public class Cliente implements ICliente {
 	 * 
 	 */
 	public boolean mandarAlgoritmos(String algos, String algoa, String algod) throws IOException {
-		out.write(ALGORITMOS+":"+algos+":"+RSA+":"+algod);
-		out.flush();
+		System.out.println("Cliente: " + ALGORITMOS+":"+algos+":"+RSA+":"+algod);
+		out.println(ALGORITMOS+":"+algos+":"+RSA+":"+algod);
 		String respuesta = in.readLine();
+		System.out.println("Servidor: " + respuesta);
 		String estado = respuesta.split(":")[1];
 		if(estado.equals(OK)){return true;}
 		else{return false;}
@@ -164,5 +165,11 @@ public class Cliente implements ICliente {
 			e.printStackTrace();
 		}
 		cli.establecerConexion();
+		try {
+			cli.mandarAlgoritmos(DES, RSA, HMACMD5);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

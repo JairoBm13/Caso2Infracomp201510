@@ -1,11 +1,13 @@
 package caso2;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -16,12 +18,14 @@ import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
+import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.x509.X509V1CertificateGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
@@ -309,25 +313,33 @@ public class Cliente implements ICliente {
 	public byte[] recibirCertificadoServidor(){
 		try {
 			System.out.println("Servidor: " +  in.readLine());
-
-			byte[] buffy = new byte[1024];
-
-			while(socket.getInputStream().available() !=0){
-				socket.getInputStream().read(buffy);
-			}
-
-			System.out.println(buffy);
+			
+			ArrayList<String> stuff = new ArrayList<String>();
 			
 			// EN BUSCA DEL INIT
 			String hola = in.readLine();
+			stuff.add(hola);
 			while(!hola.contains(INIT)){
 				hola = in.readLine();
-				System.out.println(hola);
+				stuff.add(hola);
 			}
 			
-			//
+			String certificado = "";
+			for(int i = 0; i<stuff.size()-1;i++){
+				certificado += stuff.get(i);
+			}
 			
-			return buffy;
+			String[] certLlave = stuff.get(stuff.size()-1).split(INIT + ":");
+			certificado += certLlave[0];
+			
+			byte[] certificadoServidor = certificado.getBytes();
+			
+			System.out.println(certificadoServidor);
+			System.out.println(certLlave[1]);
+			extraerLlavesimetrica(certLlave[1]);
+			//--------------------------------------
+		
+			return null;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -339,22 +351,17 @@ public class Cliente implements ICliente {
 	 * Extrae la llave simetrica enviada por el servidor
 	 * @return
 	 */
-	public SecretKey extraerLlavesimetrica(String algoritm, int tamSim){
+	public SecretKey extraerLlavesimetrica(String llaveSim){
 		
 		try{
-			
-			byte[] llaveSimCifrada =  new byte[tamSim];
-			
-			while(socket.getInputStream().available() !=0){
-				socket.getInputStream().read(llaveSimCifrada);
-			}
 			
 			Cipher cipher = Cipher.getInstance(RSA);
 			cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
 			
-			byte[] decifrado = cipher.doFinal(llaveSimCifrada);
+			byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSim);
+			byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
 			String llaveSimetrica = new String(decifrado);
-			System.out.println("clave original: " + llaveSimetrica);
+			System.out.println("Clave original: " + llaveSimetrica);
 
 		}
 		catch(Exception e){ e.printStackTrace();}

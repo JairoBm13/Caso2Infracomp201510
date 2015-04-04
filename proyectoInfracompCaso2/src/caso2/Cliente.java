@@ -105,17 +105,16 @@ public class Cliente implements ICliente {
 	 */
 	private BufferedReader sysIn;
 
-	/**
-	 * 
-	 */
-	public boolean establecerConexion() throws IOException {
-		out.write(HOLA);
-		out.flush();
-		String respuesta = in.readLine();
-		if(respuesta.equals(INICIO)){
-			return true;
-		}
-		return false;
+	//Constructor
+	public Cliente(int port) throws Exception{
+		try{
+
+			socket = new Socket(SERV, port);
+			out = new PrintWriter(socket.getOutputStream(), true);
+			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			sysIn = new BufferedReader(new InputStreamReader(System.in));
+
+		} catch(Exception e){ e.printStackTrace();}
 	}
 
 	/**
@@ -135,11 +134,7 @@ public class Cliente implements ICliente {
 		return true;
 	}
 
-	@Override
-	public boolean mandarAlgoritmos() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+
 
 	@Override
 	public byte[] envioCertificado() {
@@ -162,4 +157,11 @@ public class Cliente implements ICliente {
 
 		cli.establecerConexion();
 	}
-		}
+
+	@Override
+	public boolean mandarAlgoritmos(String algos, String algoa, String algod)
+			throws IOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+}

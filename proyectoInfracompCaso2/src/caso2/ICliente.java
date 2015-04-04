@@ -10,5 +10,5 @@ public interface ICliente {
 	
 	public byte[] envioCertificado();
 	
-	public boolean actualizarUbicacion();
+	public boolean actualizarUbicacion(byte[] cert, String ubicacion);
 }

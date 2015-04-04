@@ -1,8 +1,10 @@
 package caso2;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
@@ -14,11 +16,15 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.Cipher;
@@ -100,6 +106,10 @@ public class Cliente implements ICliente {
 	 * Cadena de control que indica el inicio de seguridad.
 	 */
 	private final static String INIT = "INIT";
+	
+	private final static String ACT1 = "ACT1";
+	private final static String ACT2 = "ACT2";
+	private final static String RTA = "RTA";
 
 	/* Algoritmos para tareas de cifrado*/
 
@@ -178,6 +188,11 @@ public class Cliente implements ICliente {
 	 * Llaves privada y publica del cliente
 	 */
 	private KeyPair llavesCliente;
+	
+	/**
+	 * Llave simetrica enviada por el servidor
+	 */
+	private SecretKey llaveSimetrica;
 
 	//-----------------------------------------------
 	// Constructor
@@ -310,7 +325,7 @@ public class Cliente implements ICliente {
 	 * Se recibe el certificado del servidor
 	 * @return
 	 */
-	public byte[] recibirCertificadoServidor(){
+	public byte[] recibirCertificadoServidor(String algoritmoSimetrico){
 		try {
 			System.out.println("Servidor: " +  in.readLine());
 			
@@ -336,10 +351,10 @@ public class Cliente implements ICliente {
 			
 			System.out.println(certificadoServidor);
 			System.out.println(certLlave[1]);
-			extraerLlavesimetrica(certLlave[1]);
+			llaveSimetrica = extraerLlavesimetrica(certLlave[1], DES);
 			//--------------------------------------
 		
-			return null;
+			return certificadoServidor;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -351,7 +366,7 @@ public class Cliente implements ICliente {
 	 * Extrae la llave simetrica enviada por el servidor
 	 * @return
 	 */
-	public SecretKey extraerLlavesimetrica(String llaveSim){
+	public SecretKey extraerLlavesimetrica(String llaveSim, String algoritmo){
 		
 		try{
 			
@@ -362,18 +377,51 @@ public class Cliente implements ICliente {
 			byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
 			String llaveSimetrica = new String(decifrado);
 			System.out.println("Clave original: " + llaveSimetrica);
-
+			byte[] decodedKey = Base64.getDecoder().decode(llaveSim);
+			SecretKey simetrica = new SecretKeySpec(decodedKey,0,decodedKey.length,DES);
+			return simetrica;
 		}
-		catch(Exception e){ e.printStackTrace();}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 		return null;
 	}
 
 	/**
 	 * 
 	 */
-	public boolean actualizarUbicacion() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean actualizarUbicacion(byte[] certificado, String ubicacion) {
+		try {
+
+			Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+			cipher.init(Cipher.ENCRYPT_MODE, llaveSimetrica);
+			byte[] ubicacionCifrada = cipher.doFinal(ubicacion.getBytes());
+			
+			out.println(ACT1+":"+ubicacionCifrada);
+			System.out.println("Cliente: "+ACT1+":"+ubicacionCifrada);
+			
+			X509Certificate certificadoArmado = reconstruirCertificado(certificado);
+			System.out.println(certificadoArmado);
+			PublicKey llaveServidor = certificadoArmado.getPublicKey();
+			return true;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private X509Certificate reconstruirCertificado(byte[] certificado){
+		CertificateFactory certFactory;
+		try {
+			certFactory = CertificateFactory.getInstance("X.509");
+			InputStream in = new ByteArrayInputStream(certificado);
+			X509Certificate cert = (X509Certificate)certFactory.generateCertificate(in);
+			return cert;
+		} catch (CertificateException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	/**
@@ -394,7 +442,7 @@ public class Cliente implements ICliente {
 			e.printStackTrace();
 		}
 		cli.envioCertificado();
-		cli.recibirCertificadoServidor();
-//		cli.extraerLlavesimetrica(DES, 64);
+		byte[] certificado = cli.recibirCertificadoServidor(DES);
+		cli.actualizarUbicacion(certificado, "4124.2028,210.4418");
 	}
 }

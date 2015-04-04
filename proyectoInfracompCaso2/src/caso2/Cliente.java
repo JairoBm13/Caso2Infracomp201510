@@ -8,6 +8,7 @@ import java.net.Socket;
 
 public class Cliente implements ICliente {
 
+	//Constantes
 	/**
 	 * Direccion del servidor a usar.
 	 */
@@ -90,7 +91,7 @@ public class Cliente implements ICliente {
 	private Socket socket;
 
 	/**
-	 * Writer par aenviar mensajes de control al servidor
+	 * Writer para enviar mensajes de control al servidor
 	 */
 	private PrintWriter out;
 
@@ -106,22 +107,6 @@ public class Cliente implements ICliente {
 
 	/**
 	 * 
-	 * @throws Exception
-	 */
-	public Cliente() throws Exception {
-		try {
-			socket = new Socket(SERV, PORT);
-			out = new PrintWriter(socket.getOutputStream(), true);
-			in = new BufferedReader(new InputStreamReader(
-					socket.getInputStream()));
-			sysIn = new BufferedReader(new InputStreamReader(System.in));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * 
 	 */
 	public boolean establecerConexion() throws IOException {
 		out.write(HOLA);
@@ -133,14 +118,27 @@ public class Cliente implements ICliente {
 		return false;
 	}
 
+	/**
+	 * Se inicia la comunicacion con el servidor enviando la cadena de control "HOLA"
+	 */
+	public boolean establecerConexion() {
+		try {
+			System.out.println("Cliente: " + HOLA);
+			out.println(HOLA);
+			System.out.println("Servidor: " + in.readLine());
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
 	@Override
-	public boolean mandarAlgoritmos(String algos, String algoa, String algod) throws IOException {
-		out.write(ALGORITMOS+":"+algos+":"+RSA+":"+algod);
-		out.flush();
-		String respuesta = in.readLine();
-		String estado = respuesta.split(":")[1];
-		if(estado.equals(OK)){return true;}
-		else{return false;}
+	public boolean mandarAlgoritmos() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
@@ -148,14 +146,20 @@ public class Cliente implements ICliente {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 	@Override
 	public boolean actualizarUbicacion() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args){
+		Cliente cli = null;
+		try{
+			cli = new Cliente(PORT);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 
+		cli.establecerConexion();
 	}
-}
+		}

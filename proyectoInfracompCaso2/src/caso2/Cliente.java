@@ -24,7 +24,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.Cipher;
@@ -33,6 +32,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
+import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.x509.X509V1CertificateGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
@@ -347,7 +347,8 @@ public class Cliente implements ICliente {
 			String[] certLlave = stuff.get(stuff.size()-1).split(INIT + ":");
 			certificado += certLlave[0];
 			
-			byte[] certificadoServidor = certificado.getBytes();
+			
+			byte[] certificadoServidor =  Base64.encode(certificado.getBytes());
 			
 			System.out.println(certificadoServidor);
 
@@ -377,10 +378,8 @@ public class Cliente implements ICliente {
 			byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSim);
 			byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
 			String llaveSimetrica = new String(decifrado);
-			System.out.println(1);
 			System.out.println("Clave original: " + llaveSimetrica);
-			byte[] decodedKey = Base64.getDecoder().decode(llaveSim);
-			SecretKey simetrica = new SecretKeySpec(decodedKey,0,decodedKey.length,DES);
+			SecretKey simetrica = new SecretKeySpec(decifrado,0,decifrado.length,DES);
 			return simetrica;
 		}
 		catch(Exception e){
@@ -413,6 +412,11 @@ public class Cliente implements ICliente {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param certificado
+	 * @return
+	 */
 	private X509Certificate reconstruirCertificado(byte[] certificado){
 		CertificateFactory certFactory;
 		try {
@@ -426,6 +430,7 @@ public class Cliente implements ICliente {
 		}
 	}
 
+	
 	/**
 	 * 
 	 * @param args
@@ -447,6 +452,5 @@ public class Cliente implements ICliente {
 
 		byte[] certificado = cli.recibirCertificadoServidor(DES);
 		cli.actualizarUbicacion(certificado, "4124.2028,210.4418");
-
 	}
 }

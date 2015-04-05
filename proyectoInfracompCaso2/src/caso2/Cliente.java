@@ -2,24 +2,18 @@ package caso2;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -32,8 +26,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
-import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.x509.X509V1CertificateGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 /**
@@ -78,11 +70,6 @@ public class Cliente implements ICliente {
 	private final static String ALGORITMOS = "ALGORITMOS";
 
 	/**
-	 * Cadena de control que indica el estado de la conexion
-	 */
-	private final static String ESTADO = "ESTADO";
-
-	/**
 	 * Cadena de control que indica una conexion exitosa
 	 */
 	private final static String OK = "OK";
@@ -98,17 +85,23 @@ public class Cliente implements ICliente {
 	private final static String CERCLNT = "CERCLNT";
 
 	/**
-	 * Cadena de control que indica el envio del certificado del servidor
-	 */
-	private final static String CERTSRV = "CERTSRV";
-
-	/**
 	 * Cadena de control que indica el inicio de seguridad.
 	 */
 	private final static String INIT = "INIT";
 	
+	/**
+	 * 
+	 */
 	private final static String ACT1 = "ACT1";
+	
+	/**
+	 * 
+	 */
 	private final static String ACT2 = "ACT2";
+	
+	/**
+	 * 
+	 */
 	private final static String RTA = "RTA";
 
 	/* Algoritmos para tareas de cifrado*/
@@ -180,11 +173,6 @@ public class Cliente implements ICliente {
 	private BufferedReader in;
 
 	/**
-	 * Reader para visualizar como se lleva a cabo el protocolo
-	 */
-	private BufferedReader sysIn;
-
-	/**
 	 * Llaves privada y publica del cliente
 	 */
 	private KeyPair llavesCliente;
@@ -209,7 +197,6 @@ public class Cliente implements ICliente {
 			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			sysIn = new BufferedReader(new InputStreamReader(System.in));
 
 		} catch(Exception e){ e.printStackTrace();}
 	}
@@ -270,8 +257,6 @@ public class Cliente implements ICliente {
 		}
 	}
 
-
-
 	/**
 	 * 
 	 * @return
@@ -331,6 +316,7 @@ public class Cliente implements ICliente {
 			
 			ArrayList<String> stuff = new ArrayList<String>();
 			
+			String cosa = in.readLine();
 			// EN BUSCA DEL INIT
 			String hola = in.readLine();
 			stuff.add(hola);
@@ -345,14 +331,15 @@ public class Cliente implements ICliente {
 			}
 			
 			String[] certLlave = stuff.get(stuff.size()-1).split(INIT + ":");
-			certificado += certLlave[0];
+			certificado += cosa;
+			System.out.println("cosa "+cosa);
 			
 			
-			byte[] certificadoServidor =  Base64.encode(certificado.getBytes());
+			byte[] certificadoServidor =  certificado.getBytes();
 			
 			System.out.println(certificadoServidor);
 
-			llaveSimetrica = extraerLlavesimetrica(certLlave[1], DES);
+			llaveSimetrica = extraerLlavesimetrica(certLlave[1], algoritmoSimetrico);
 
 			//--------------------------------------
 		

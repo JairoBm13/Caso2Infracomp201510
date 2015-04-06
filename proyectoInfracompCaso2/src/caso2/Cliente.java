@@ -73,10 +73,16 @@ public class Cliente implements ICliente {
 	 * Cadena de control que indica el envio del certificado del cliente
 	 */
 	private final static String CERCLNT = "CERCLNT";
-
+	
+	/**
+	 * Actualizacion 1 de pocicsion
+	 */
 	private final static String ACT1 = "ACT1";
+	
+	/**
+	 * 
+	 */
 	private final static String ACT2 = "ACT2";
-
 
 	//-------------------------------------------------
 	// Atributos
@@ -98,11 +104,6 @@ public class Cliente implements ICliente {
 	private BufferedReader in;
 
 	/**
-	 * Reader para visualizar como se lleva a cabo el protocolo
-	 */
-	private BufferedReader sysIn;
-
-	/**
 	 * Llaves privada y publica del cliente
 	 */
 	private KeyPair llavesCliente;
@@ -122,7 +123,6 @@ public class Cliente implements ICliente {
 			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			sysIn = new BufferedReader(new InputStreamReader(System.in));
 
 		} catch(Exception e){ e.printStackTrace();}
 	}
@@ -187,8 +187,6 @@ public class Cliente implements ICliente {
 			return null;
 		}
 	}
-
-
 
 	/**
 	 * Crea el certificado digital del cliente

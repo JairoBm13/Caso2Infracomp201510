@@ -1,0 +1,4 @@
+Simetrico:DES
+Asimetrico:RSA
+HMAC:HMACMD5
+Padding:DES/ECB/PKCS5Padding

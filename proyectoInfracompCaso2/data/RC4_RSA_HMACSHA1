@@ -1,0 +1,4 @@
+Simetrico:RC4
+Asimetrico:RSA
+HMAC:HMACSHA1
+Padding:RC4

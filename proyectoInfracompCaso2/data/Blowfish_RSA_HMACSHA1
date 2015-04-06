@@ -1,0 +1,4 @@
+Simetrico:Blowfish
+Asimetrico:RSA
+HMAC:HMACSHA1
+Padding:Blowfish

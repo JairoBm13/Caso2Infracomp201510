@@ -1,0 +1,4 @@
+Simetrico:AES
+Asimetrico:RSA
+HMAC:HMACMD5
+Padding:AES/ECB/PKCS5Padding

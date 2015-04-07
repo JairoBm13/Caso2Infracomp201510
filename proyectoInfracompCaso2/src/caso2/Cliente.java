@@ -19,15 +19,14 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 
 import javax.crypto.Cipher;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
+import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
-
-
-
 /**
  * 
  * @author Jairo Bautista & Santiago Beltran Caicedo
@@ -251,8 +250,8 @@ public class Cliente implements ICliente {
 		try {
 			System.out.println("Servidor: " +  in.readLine());
 			CertificateFactory  cf = CertificateFactory.getInstance("X.509");
-			Certificate certificate = cf.generateCertificate(socket.getInputStream());
-
+			Certificate certificate = cf.generateCertificate(socket.getInputStream());getClass();
+			
 			System.out.println("------------------------------------------------------------------");
 			System.out.println(certificate.toString());
 			System.out.println("------------------------------------------------------------------");
@@ -300,10 +299,14 @@ public class Cliente implements ICliente {
 	 * Envia la pocision actualizada al servidor usando la llave simetrica obtenidad anteriormente
 	 * para cifrar dicha pocision.
 	 */
-	public boolean actualizarUbicacion(String paddingSim, SecretKey llaveSim ,PublicKey llavePubServidor, String ubicacion) {
+	public boolean actualizarUbicacion(String algHMAC, String paddingSim, SecretKey llaveSim ,PublicKey llavePubServidor, String ubicacion) {
 
 		try {
 
+			//===================================
+			// ACT1
+			//===================================
+			
 			Cipher cipher = Cipher.getInstance(paddingSim);
 			cipher.init(Cipher.ENCRYPT_MODE, llaveSim);
 
@@ -312,7 +315,6 @@ public class Cliente implements ICliente {
 			out.print(ACT1+":");
 			socket.getOutputStream().write(ubicacionCifrada);
 			socket.getOutputStream().flush();
-
 			System.out.print("Cliente: "+ACT1+":");
 
 			for(int i =0; i<ubicacionCifrada.length;i++){
@@ -323,7 +325,30 @@ public class Cliente implements ICliente {
 			//===================================
 			// ACT2
 			//===================================
+			
+//			HMac mac = new HMac(new Digest
+			Mac mac = Mac.getInstance(algHMAC);
+			mac.init(llaveSim);
+			byte[] macCoord = mac.doFinal(ubicacion.getBytes());
+			
+			cipher = Cipher.getInstance(llavePubServidor.getAlgorithm());
+			cipher.init(Cipher.ENCRYPT_MODE, llavePubServidor);
+			byte[] integridad =cipher.doFinal(macCoord);
+			
+			
+			out.print(ACT2+":");
+			socket.getOutputStream().write(integridad);
+			socket.getOutputStream().flush();
+			
+//			System.out.print("Cliente: "+ACT2+":");
+//
+//			for(int i =0; i<macCoord.length;i++){
+//				System.out.print(macCoord[i]);
+//			}
 
+			
+			System.out.println("Servidor: "+in.readLine());
+			
 			return true;
 
 		} catch (Exception e) {
@@ -352,7 +377,7 @@ public class Cliente implements ICliente {
 		String paddingSim = "";
 
 		try{
-			BufferedReader br = new BufferedReader(new FileReader("data/AES_RSA_HMACSHA1"));
+			BufferedReader br = new BufferedReader(new FileReader("data/RC4_RSA_HMACMD5"));
 
 			algSimetrico = br.readLine().split(":")[1];
 			algAsimetrico = br.readLine().split(":")[1];
@@ -377,7 +402,7 @@ public class Cliente implements ICliente {
 
 			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
 
-			cli.actualizarUbicacion(paddingSim, llaveSimetrica, llavePublicaServidor,  "4124.2028,210.4418");
+			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41 24.2028 2 10.4418");
 		}
 	}
 }

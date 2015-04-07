@@ -13,5 +13,5 @@ public interface ICliente {
 	
 	public byte[] envioCertificado(String algAsim);
 	
-	public boolean actualizarUbicacion(String paddindSim, SecretKey llaveSim, PublicKey llavePubServ , String ubicacion);
+	public boolean actualizarUbicacion(String algHmac, String paddindSim, SecretKey llaveSim, PublicKey llavePubServ , String ubicacion);
 }

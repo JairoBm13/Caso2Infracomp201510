@@ -16,6 +16,7 @@ import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.Cipher;
@@ -192,6 +193,7 @@ public class Cliente implements ICliente {
 	 * @return
 	 */
 	private X509Certificate crearCertificado(String algAsim){
+		
 		Date startDate = new Date(System.currentTimeMillis());                
 		Date expiryDate = new Date(System.currentTimeMillis() + 30L * 365L * 24L * 60L * 60L * 1000L);
 		BigInteger serialNumber = new BigInteger("26");       
@@ -206,7 +208,7 @@ public class Cliente implements ICliente {
 		certGen.setNotAfter(expiryDate);
 		certGen.setSubjectDN(subjectName);
 		certGen.setPublicKey(llavesCliente.getPublic());
-		certGen.setSignatureAlgorithm("MD5withRSA"); 
+		certGen.setSignatureAlgorithm("SHA256WithRSAEncryption"); 
 
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
@@ -294,6 +296,17 @@ public class Cliente implements ICliente {
 		}
 		return null;
 	}
+	
+	private String encapsular(byte[] cifrado){
+		char[] hexArray = "0123456789ABCDEF".toCharArray();
+		char[] hexChars = new char[cifrado.length * 2];
+	    for ( int j = 0; j < cifrado.length; j++ ) {
+	        int v = cifrado[j] & 0xFF;
+	        hexChars[j * 2] = hexArray[v >>> 4];
+	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	    }
+	    return new String(hexChars);
+	}
 
 	/**
 	 * Envia la pocision actualizada al servidor usando la llave simetrica obtenidad anteriormente
@@ -303,51 +316,40 @@ public class Cliente implements ICliente {
 
 		try {
 
+			
 			//===================================
 			// ACT1
 			//===================================
+			
+			System.out.println("Posicion Actual: " + ubicacion);
 			
 			Cipher cipher = Cipher.getInstance(paddingSim);
 			cipher.init(Cipher.ENCRYPT_MODE, llaveSim);
 
 			byte[] ubicacionCifrada = cipher.doFinal(ubicacion.getBytes());
-
-			out.print(ACT1+":");
-			socket.getOutputStream().write(ubicacionCifrada);
-			socket.getOutputStream().flush();
-			System.out.print("Cliente: "+ACT1+":");
-
-			for(int i =0; i<ubicacionCifrada.length;i++){
-				System.out.print(ubicacionCifrada[i]);
-			}
-			System.out.println();
+			out.println(ACT1+":"+encapsular(ubicacionCifrada));
+			
+			System.out.println("Cliente: "+ACT1+":"+ encapsular(ubicacionCifrada));
 
 			//===================================
 			// ACT2
 			//===================================
-			
-//			HMac mac = new HMac(new Digest
+						
 			Mac mac = Mac.getInstance(algHMAC);
-			mac.init(llaveSim);
-			byte[] macCoord = mac.doFinal(ubicacion.getBytes());
+			SecretKey secret = new SecretKeySpec(llaveSim.getEncoded(), algHMAC);
+			mac.init(secret);
+			mac.update(ubicacion.getBytes());
+			byte[] macCoord = mac.doFinal();
 			
 			cipher = Cipher.getInstance(llavePubServidor.getAlgorithm());
 			cipher.init(Cipher.ENCRYPT_MODE, llavePubServidor);
 			byte[] integridad =cipher.doFinal(macCoord);
 			
+			out.println(ACT2+":"+encapsular(integridad));
 			
-			out.print(ACT2+":");
-			socket.getOutputStream().write(integridad);
-			socket.getOutputStream().flush();
+			System.out.println("Cliente: "+ACT2+":"+encapsular(integridad));
 			
-//			System.out.print("Cliente: "+ACT2+":");
-//
-//			for(int i =0; i<macCoord.length;i++){
-//				System.out.print(macCoord[i]);
-//			}
-
-			
-			System.out.println("Servidor: "+in.readLine());
+			System.out.println("Servidor: " + in.readLine());
 			
 			return true;
 
@@ -377,12 +379,13 @@ public class Cliente implements ICliente {
 		String paddingSim = "";
 
 		try{
-			BufferedReader br = new BufferedReader(new FileReader("data/RC4_RSA_HMACMD5"));
+			BufferedReader br = new BufferedReader(new FileReader("data/RC4_RSA_HMACSHA256"));
 
 			algSimetrico = br.readLine().split(":")[1];
 			algAsimetrico = br.readLine().split(":")[1];
 			algHmac = br.readLine().split(":")[1];
 			paddingSim = br.readLine().split(":")[1];
+			br.close();
 
 		} catch(Exception e){ e.printStackTrace();}
 
@@ -402,7 +405,7 @@ public class Cliente implements ICliente {
 
 			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
 
-			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41 24.2028 2 10.4418");
+			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
 		}
 	}
 }

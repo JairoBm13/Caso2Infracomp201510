@@ -1,6 +1,7 @@
 package caso2;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,7 +17,6 @@ import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.Cipher;
@@ -26,7 +26,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
-import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 /**
  * 
@@ -42,12 +41,12 @@ public class Cliente implements ICliente {
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "infracomp.virtual.uniandes.edu.co";
+	private final static String SERV = "192.168.0.8";
 
 	/**
 	 * Puerto servidor con seguridad
 	 */
-	private final static int PORT = 443;
+	private final static int PORT = 8080;
 
 	/**
 	 * Puerto del servidor sin autenticaciones de seguridad
@@ -108,6 +107,30 @@ public class Cliente implements ICliente {
 	 */
 	private KeyPair llavesCliente;
 
+	/**
+	 * Mide el tiempo de establecimiento de llave de sesion
+	 */
+	private static long tILlaveSesion;
+	
+	/**
+	 * Mide el tiempo de establecimiento de llave de sesion
+	 */
+	private static long tFLlaveSesion;
+	
+	/**
+	 * Mide el tiempo de la transaccion
+	 */
+	private static long tITransaccion;
+	
+	/**
+	 * Mide el tiempo de la transaccion
+	 */
+	private static long tFTransaccion;
+	
+	/**
+	 * Indica si la transaccion fue exitosa
+	 */
+	private static boolean exitosa;
 	//-----------------------------------------------
 	// Constructor
 	//-----------------------------------------------
@@ -117,14 +140,17 @@ public class Cliente implements ICliente {
 	 * @param port
 	 * @throws Exception
 	 */
-	public Cliente(int port) throws Exception{
+	public Cliente(int port) {
 		try{
 
 			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-		} catch(Exception e){ e.printStackTrace();}
+		} catch(Exception e){ 
+			e.printStackTrace();
+			
+			}
 	}
 
 	/**
@@ -132,12 +158,14 @@ public class Cliente implements ICliente {
 	 */
 	public boolean establecerConexion() {
 		try {
+			tITransaccion = System.currentTimeMillis();
 			System.out.println("Cliente: " + HOLA);
 			out.println(HOLA);
 			System.out.println("Servidor: " + in.readLine());
 
 		} catch (IOException e) {
 			e.printStackTrace();
+			exitosa = false;
 			return false;
 		}
 		return true;
@@ -163,6 +191,7 @@ public class Cliente implements ICliente {
 
 		catch(Exception e){ 
 			e.printStackTrace();
+			exitosa = false;
 			return false; 
 		}
 	}
@@ -179,11 +208,13 @@ public class Cliente implements ICliente {
 			out.println(CERCLNT);
 			socket.getOutputStream().write(certByte);
 			socket.getOutputStream().flush();	
-
+			tILlaveSesion = System.currentTimeMillis();
+			
 			return certByte;
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			exitosa = false;
 			return null;
 		}
 	}
@@ -223,6 +254,7 @@ public class Cliente implements ICliente {
 			return cert;
 		} catch (Exception e) {
 			e.printStackTrace();
+			exitosa = false;
 			return null;
 		}   
 	}
@@ -240,6 +272,7 @@ public class Cliente implements ICliente {
 			return llavesCliente;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
+			exitosa = false;
 			return null;
 		}
 	}
@@ -264,6 +297,7 @@ public class Cliente implements ICliente {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			exitosa = false;
 			return null;
 		}
 	}
@@ -277,10 +311,14 @@ public class Cliente implements ICliente {
 		try{
 
 			String[] llaveSimInit = in.readLine().split(":");
+			
+			tFLlaveSesion = System.currentTimeMillis();
+			
 			System.out.println("Servidor: " + llaveSimInit[0] + ": " + llaveSimInit[1]);
 
 			Cipher cipher = Cipher.getInstance(algAsimetrico);
 			cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
+			
 
 			byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSimInit[1]);
 			byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
@@ -293,6 +331,7 @@ public class Cliente implements ICliente {
 		}
 		catch(Exception e){
 			e.printStackTrace();
+			exitosa = false;
 		}
 		return null;
 	}
@@ -350,11 +389,12 @@ public class Cliente implements ICliente {
 			System.out.println("Cliente: "+ACT2+":"+encapsular(integridad));
 			
 			System.out.println("Servidor: " + in.readLine());
-			
+			tFTransaccion = System.currentTimeMillis();
 			return true;
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			exitosa = false;
 			return false;
 		}
 	}
@@ -365,10 +405,13 @@ public class Cliente implements ICliente {
 	 */
 	public static void main(String[] args){
 		Cliente cli = null;
+		exitosa = true;
+		
 		try{
 			cli = new Cliente(PORT);
 		}catch(Exception e){
 			e.printStackTrace();
+			exitosa = false;
 		}
 
 		//Manejo de diferentes casos de algoritmos
@@ -387,17 +430,21 @@ public class Cliente implements ICliente {
 			paddingSim = br.readLine().split(":")[1];
 			br.close();
 
-		} catch(Exception e){ e.printStackTrace();}
+		} catch(Exception e){ 
+			e.printStackTrace();
+			exitosa = false;
+			}
 
 		//comienzo de la comunicacion cliente a servidor
-
+		
 		cli.establecerConexion();
 
 		boolean algosAceptados = cli.mandarAlgoritmos(algSimetrico, algAsimetrico, algHmac);
 
-		if(!algosAceptados)
+		if(!algosAceptados){
 			System.out.println("No se aceptaron los algoritmos");
-
+			exitosa = false;
+		}
 		else{
 			cli.envioCertificado(algAsimetrico);
 
@@ -407,5 +454,19 @@ public class Cliente implements ICliente {
 
 			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
 		}
+		
 	}
+	
+	public long darTiempoLlaveSesion(){
+		return tFLlaveSesion - tILlaveSesion;
+	}
+	
+	public long darTimepoTransaccion(){
+		return tFTransaccion - tFTransaccion;
+	}
+	
+	public boolean darTransaccionExitosa(){
+		return exitosa;
+	}
+	
 }

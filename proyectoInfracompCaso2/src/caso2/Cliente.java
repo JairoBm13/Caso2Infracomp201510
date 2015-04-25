@@ -1,7 +1,6 @@
 package caso2;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -48,10 +47,10 @@ public class Cliente implements ICliente {
 	 */
 	private final static int PORT = 8080;
 
-	/**
-	 * Puerto del servidor sin autenticaciones de seguridad
-	 */
-	private final static int PORTINSEGUR = 80;
+//	/**
+//	 * Puerto del servidor sin autenticaciones de seguridad
+//	 */
+//	private final static int PORTINSEGUR = 80;
 
 	/**
 	 * Cadena de control que indica el inicio de la conversacion
@@ -140,17 +139,15 @@ public class Cliente implements ICliente {
 	 * @param port
 	 * @throws Exception
 	 */
-	public Cliente(int port) {
+	public Cliente(int port) throws Exception {
 		try{
-
 			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
 		} catch(Exception e){ 
 			e.printStackTrace();
-			
-			}
+			throw new Exception("Problema al conectar con el servidor");
+		}
 	}
 
 	/**
@@ -461,12 +458,80 @@ public class Cliente implements ICliente {
 		return tFLlaveSesion - tILlaveSesion;
 	}
 	
-	public long darTimepoTransaccion(){
-		return tFTransaccion - tFTransaccion;
+	public long darTiempoTransaccion(){
+		return tFTransaccion - tITransaccion;
 	}
 	
 	public boolean darTransaccionExitosa(){
 		return exitosa;
+	}
+
+	public Socket getSocket() {
+		return socket;
+	}
+
+	public void setSocket(Socket socket) {
+		this.socket = socket;
+	}
+
+	public PrintWriter getOut() {
+		return out;
+	}
+
+	public void setOut(PrintWriter out) {
+		this.out = out;
+	}
+
+	public BufferedReader getIn() {
+		return in;
+	}
+
+	public void setIn(BufferedReader in) {
+		this.in = in;
+	}
+
+	public KeyPair getLlavesCliente() {
+		return llavesCliente;
+	}
+
+	public void setLlavesCliente(KeyPair llavesCliente) {
+		this.llavesCliente = llavesCliente;
+	}
+
+	public static long gettILlaveSesion() {
+		return tILlaveSesion;
+	}
+
+	public static void settILlaveSesion(long tILlaveSesion) {
+		Cliente.tILlaveSesion = tILlaveSesion;
+	}
+
+	public static long gettFLlaveSesion() {
+		return tFLlaveSesion;
+	}
+
+	public static void settFLlaveSesion(long tFLlaveSesion) {
+		Cliente.tFLlaveSesion = tFLlaveSesion;
+	}
+
+	public static long gettITransaccion() {
+		return tITransaccion;
+	}
+
+	public static void settITransaccion(long tITransaccion) {
+		Cliente.tITransaccion = tITransaccion;
+	}
+
+	public static long gettFTransaccion() {
+		return tFTransaccion;
+	}
+
+	public static void settFTransaccion(long tFTransaccion) {
+		Cliente.tFTransaccion = tFTransaccion;
+	}
+
+	public void setExitosa(boolean exitosa) {
+		Cliente.exitosa = exitosa;
 	}
 	
 }

@@ -31,8 +31,8 @@ public class Cargador {
 	 */
 	public Cargador(){
 		Task tarea = createTask();
-		int numberOfTasks = 5;
-		int gapBetweenTask = 20;
+		int numberOfTasks = 80;
+		int gapBetweenTask = 100;
 		cargdor = new LoadGenerator("Carga del servidor desde el cliente", numberOfTasks, tarea, gapBetweenTask);
 		cargdor.generate();
 //		try {

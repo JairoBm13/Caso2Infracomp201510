@@ -21,8 +21,6 @@ public class TaskClienteUnidad extends Task {
 	 */
 	private Cliente cliente;
 
-
-	
 	private ArrayList<Datos> datos; 
 
 
@@ -43,13 +41,12 @@ public class TaskClienteUnidad extends Task {
 
 	@Override
 	public void execute() {
-
-
 			
 				try{
-					cliente = new Cliente(90);
+					cliente = new Cliente(8080);
 				}catch(Exception e){
-					cliente.setExitosa(false);
+//					cliente.setExitosa(false);
+					e.printStackTrace();
 				}
 				
 				//Manejo de diferentes casos de algoritmos

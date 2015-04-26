@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.Security;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 
@@ -39,7 +41,7 @@ public class Servidor extends Thread {
 	/**
 	 * Puerto en el cual escucha el servidor.
 	 */
-	public static final int PUERTO = 443;
+	public static final int PUERTO = 8080;
 
 	/**
 	 * El socket que permite recibir requerimientos por parte de clientes.
@@ -74,10 +76,13 @@ public class Servidor extends Thread {
 		// Crea un semaforo que da turnos para usar el socket.
 		Semaphore semaphore = new Semaphore(1);
 
+		//Pool de threads
+		ExecutorService pool = Executors.newFixedThreadPool(N_THREADS);
+		
 		// Genera n threads que correran durante la sesion.
 		Servidor [] threads = new Servidor[N_THREADS];
 		for ( int i = 0 ; i < N_THREADS ; i++) {
-			threads[i] = new Servidor(i, semaphore);
+			pool.execute(new Servidor(i, semaphore));
 		}
 		System.out.println("El servidor esta listo para aceptar conexiones.");
 	}
@@ -96,7 +101,7 @@ public class Servidor extends Thread {
 	public Servidor(int id, Semaphore semaphore) throws  SocketException {
 		this.id = id;
 		this.semaphore = semaphore;
-		this.start();
+//		this.start();
 	}
 
 	/**

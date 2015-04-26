@@ -20,7 +20,7 @@ public class Cargador {
 	 */
 	private LoadGenerator cargdor;
 
-	private File archivoExcelSeguro = new File("./docs/analisisConSeguridad.xlsx");
+	private File archivoExcelSeguro = new File("./docs/analisisConSeguridad.xls");
 
 	private File archivoExcelInseguro = new File("./docs/analisisSinSeguridad.xlsx");
 

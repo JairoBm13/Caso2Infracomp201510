@@ -1,16 +1,8 @@
 package Cargador;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.security.PublicKey;
 import java.util.ArrayList;
-
 import javax.crypto.SecretKey;
-
-import jxl.Workbook;
-import jxl.write.WritableWorkbook;
 import caso2.Cliente;
 import uniandes.gload.core.Task;
 
@@ -27,8 +19,8 @@ public class TaskClienteUnidad extends Task {
 
 
 	
-	public TaskClienteUnidad() {
-		datos = new ArrayList<>();
+	public TaskClienteUnidad(ArrayList<Datos> datos) {
+		this.datos = datos;
 	}
 
 	@Override
@@ -99,7 +91,7 @@ public class TaskClienteUnidad extends Task {
 		public Datos(long nTLlave, long nTRespuesta, boolean nEstado){
 			tiempoLlave = nTLlave;
 			tiempoRespuesta = nTRespuesta;
-			estado = nEstado;
+			setEstado(nEstado);
 		}
 
 		/**
@@ -128,6 +120,14 @@ public class TaskClienteUnidad extends Task {
 		 */
 		public void setTiempoRespuesta(long tiempoRespuesta) {
 			this.tiempoRespuesta = tiempoRespuesta;
+		}
+
+		public boolean isEstado() {
+			return estado;
+		}
+
+		public void setEstado(boolean estado) {
+			this.estado = estado;
 		}
 	}
 }

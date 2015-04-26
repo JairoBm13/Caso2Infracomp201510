@@ -1,24 +1,23 @@
 package Cargador;
 
-import java.security.PublicKey;
 import java.util.ArrayList;
-import javax.crypto.SecretKey;
-import caso2.Cliente;
+
+import caso2.ClienteSinS;
 import uniandes.gload.core.Task;
 
-public class TaskClienteUnidad extends Task {
+public class TaskClienteUnidadSinS extends Task {
 
 	/**
 	 * Cliente que realizara 
 	 */
-	private Cliente cliente;
+	private ClienteSinS cliente;
 
 	private ArrayList<Datos> datos; 
 
 
 	
-	public TaskClienteUnidad(ArrayList<Datos> datos) {
-		this.datos = datos;
+	public TaskClienteUnidadSinS() {
+		datos = new ArrayList<>();
 	}
 
 	@Override
@@ -35,11 +34,7 @@ public class TaskClienteUnidad extends Task {
 	public void execute() {
 			
 				try{
-					cliente = new Cliente(8080);
-				}catch(Exception e){
-//					cliente.setExitosa(false);
-					e.printStackTrace();
-				}
+					cliente = new ClienteSinS(90);
 				
 				//Manejo de diferentes casos de algoritmos
 				
@@ -49,21 +44,16 @@ public class TaskClienteUnidad extends Task {
 				String paddingSim = "RC4";
 				
 				cliente.establecerConexion();
-				
+
 				boolean algosAceptados = cliente.mandarAlgoritmos(algSimetrico, algAsimetrico, algHmac);
-				
+
 				if(!algosAceptados){
 					System.out.println("No se aceptaron los algoritmos");
-					cliente.setExitosa(false);
 				}
 				else{
 					cliente.envioCertificado(algAsimetrico);
-					
-					PublicKey llavePublicaServidor = cliente.recibirCertificadoServidor();
-					
-					SecretKey llaveSimetrica = cliente.extraerLlavesimetrica(algSimetrico, algAsimetrico);
-					
-					cliente.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
+
+					cliente.actualizarUbicacion("41242028,2104418");
 				}
 				Datos data = null;
 				boolean exito = cliente.darTransaccionExitosa();
@@ -74,9 +64,10 @@ public class TaskClienteUnidad extends Task {
 					data = new Datos(cliente.darTiempoFalloLlave(), cliente.darTiempoFallo(), exito);
 				}
 				datos.add(data);
-				
-			
-		
+				}catch(Exception e){
+//					cliente.setExitosa(false);
+					e.printStackTrace();
+				}	
 	}
 	
 	public class Datos{
@@ -88,7 +79,7 @@ public class TaskClienteUnidad extends Task {
 		public Datos(long nTLlave, long nTRespuesta, boolean nEstado){
 			tiempoLlave = nTLlave;
 			tiempoRespuesta = nTRespuesta;
-			setEstado(nEstado);
+			estado = nEstado;
 		}
 
 		/**
@@ -117,14 +108,6 @@ public class TaskClienteUnidad extends Task {
 		 */
 		public void setTiempoRespuesta(long tiempoRespuesta) {
 			this.tiempoRespuesta = tiempoRespuesta;
-		}
-
-		public boolean isEstado() {
-			return estado;
-		}
-
-		public void setEstado(boolean estado) {
-			this.estado = estado;
 		}
 	}
 }

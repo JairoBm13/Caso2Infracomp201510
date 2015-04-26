@@ -1,12 +1,14 @@
 package caso2;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -18,8 +20,11 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.Mac;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
@@ -47,10 +52,10 @@ public class Cliente implements ICliente {
 	 */
 	private final static int PORT = 8080;
 
-//	/**
-//	 * Puerto del servidor sin autenticaciones de seguridad
-//	 */
-//	private final static int PORTINSEGUR = 80;
+	/**
+	 * Puerto del servidor sin autenticaciones de seguridad
+	 */
+	private final static int PORTINSEGUR = 80;
 
 	/**
 	 * Cadena de control que indica el inicio de la conversacion
@@ -130,6 +135,14 @@ public class Cliente implements ICliente {
 	 * Indica si la transaccion fue exitosa
 	 */
 	private static boolean exitosa;
+	
+	/**
+	 * Indica el tiempo que tomo antes de que fallara la transaccion
+	 */
+	private static long tFallo;
+	
+	private long tFalloLllave;
+	
 	//-----------------------------------------------
 	// Constructor
 	//-----------------------------------------------
@@ -139,15 +152,17 @@ public class Cliente implements ICliente {
 	 * @param port
 	 * @throws Exception
 	 */
-	public Cliente(int port) throws Exception {
+	public Cliente(int port) {
 		try{
+
 			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
 		} catch(Exception e){ 
 			e.printStackTrace();
-			throw new Exception("Problema al conectar con el servidor");
-		}
+			
+			}
 	}
 
 	/**
@@ -162,6 +177,7 @@ public class Cliente implements ICliente {
 
 		} catch (IOException e) {
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
 			return false;
 		}
@@ -188,6 +204,7 @@ public class Cliente implements ICliente {
 
 		catch(Exception e){ 
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
 			return false; 
 		}
@@ -211,6 +228,7 @@ public class Cliente implements ICliente {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
 			return null;
 		}
@@ -251,6 +269,7 @@ public class Cliente implements ICliente {
 			return cert;
 		} catch (Exception e) {
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
 			return null;
 		}   
@@ -269,6 +288,7 @@ public class Cliente implements ICliente {
 			return llavesCliente;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
 			return null;
 		}
@@ -294,6 +314,8 @@ public class Cliente implements ICliente {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
+			tFalloLllave = tFallo;
 			exitosa = false;
 			return null;
 		}
@@ -305,31 +327,38 @@ public class Cliente implements ICliente {
 	 */
 	public SecretKey extraerLlavesimetrica(String algSimetrico, String algAsimetrico){
 
-		try{
+//		try{
 
-			String[] llaveSimInit = in.readLine().split(":");
-			
-			tFLlaveSesion = System.currentTimeMillis();
-			
-			System.out.println("Servidor: " + llaveSimInit[0] + ": " + llaveSimInit[1]);
-
-			Cipher cipher = Cipher.getInstance(algAsimetrico);
-			cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
-			
-
-			byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSimInit[1]);
-			byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
-			String llaveSimetrica = new String(decifrado);
-
-			System.out.println("Llave simetrica: " + llaveSimetrica);
-			SecretKey simetrica = new SecretKeySpec(decifrado,0,decifrado.length,algSimetrico);
-
-			return simetrica;
-		}
-		catch(Exception e){
-			e.printStackTrace();
-			exitosa = false;
-		}
+			String[] llaveSimInit;
+			try {
+				llaveSimInit = in.readLine().split(":");
+				tFLlaveSesion = System.currentTimeMillis();
+				
+				System.out.println("Servidor: " + llaveSimInit[0] + ": " + llaveSimInit[1]);
+				
+				Cipher cipher = Cipher.getInstance(algAsimetrico);
+				cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
+				
+				
+				byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSimInit[1]);
+				byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
+				String llaveSimetrica = new String(decifrado);
+				
+				System.out.println("Llave simetrica: " + llaveSimetrica);
+				SecretKey simetrica = new SecretKeySpec(decifrado,0,decifrado.length,algSimetrico);
+				
+				return simetrica;
+			} catch (IOException e) {
+				e.printStackTrace();
+				tFallo = System.currentTimeMillis();
+				tFalloLllave = tFallo;
+				exitosa = false;
+				return null;
+			} catch (Exception e) {
+				e.printStackTrace();
+				tFallo = System.currentTimeMillis();
+				exitosa = false;
+			} 
 		return null;
 	}
 	
@@ -391,6 +420,7 @@ public class Cliente implements ICliente {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
 			return false;
 		}
@@ -429,7 +459,11 @@ public class Cliente implements ICliente {
 
 		} catch(Exception e){ 
 			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
 			exitosa = false;
+			e.printStackTrace();
+
+
 			}
 
 		//comienzo de la comunicacion cliente a servidor
@@ -458,8 +492,16 @@ public class Cliente implements ICliente {
 		return tFLlaveSesion - tILlaveSesion;
 	}
 	
-	public long darTiempoTransaccion(){
+	public long darTimepoTransaccion(){
 		return tFTransaccion - tITransaccion;
+	}
+	
+	public long darTiempoFallo(){
+		return tFallo - tITransaccion;
+	}
+	
+	public long darTiempoFalloLlave(){
+		return tFalloLllave - tILlaveSesion;
 	}
 	
 	public boolean darTransaccionExitosa(){
@@ -530,8 +572,24 @@ public class Cliente implements ICliente {
 		Cliente.tFTransaccion = tFTransaccion;
 	}
 
-	public void setExitosa(boolean exitosa) {
+	public static void setExitosa(boolean exitosa) {
 		Cliente.exitosa = exitosa;
+	}
+
+	public long gettFallo() {
+		return tFallo;
+	}
+
+	public void settFallo(long tFallo) {
+		this.tFallo = tFallo;
+	}
+
+	public long gettFalloLllave() {
+		return tFalloLllave;
+	}
+
+	public void settFalloLllave(long tFalloLllave) {
+		this.tFalloLllave = tFalloLllave;
 	}
 	
 }

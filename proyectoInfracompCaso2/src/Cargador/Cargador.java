@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import Cargador.TaskClienteUnidad.Datos;
+import caso2.Cliente;
+//import Cargador.TaskClienteUnidad.Datos;
 import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableSheet;
@@ -36,9 +37,10 @@ public class Cargador {
 	 */
 	public Cargador(){
 
+		
 		ArrayList<Datos> datos = new ArrayList<Datos>(); 
-		Task tarea = createTask(datos);
-		int numberOfTasks = 5;
+		Task tarea = new Cliente(8080,datos);
+		int numberOfTasks = 400;
 		int gapBetweenTask = 20;
 		cargdor = new LoadGenerator("Carga del servidor desde el cliente", numberOfTasks, tarea, gapBetweenTask);
 		cargdor.generate();
@@ -87,9 +89,9 @@ public class Cargador {
 	/**
 	 * 
 	 */
-	private Task createTask(ArrayList<Datos> datos){
-		return new TaskClienteUnidad(datos);
-	}
+//	private Task createTask(ArrayList<Datos> datos){
+//		return new TaskClienteUnidad(datos);
+//	}
 
 	/**
 	 * 

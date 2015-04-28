@@ -45,7 +45,7 @@ public class Cliente implements ICliente {
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "192.168.0.8";
+	private final static String SERV = "157";
 
 	/**
 	 * Puerto servidor con seguridad
@@ -591,5 +591,4 @@ public class Cliente implements ICliente {
 	public void settFalloLllave(long tFalloLllave) {
 		this.tFalloLllave = tFalloLllave;
 	}
-	
 }

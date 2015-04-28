@@ -18,6 +18,7 @@ import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.crypto.BadPaddingException;
@@ -31,12 +32,15 @@ import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.x509.X509V3CertificateGenerator;
+
+import Cargador.Datos;
+import uniandes.gload.core.Task;
 /**
  * 
  * @author Jairo Bautista & Santiago Beltran Caicedo
  *
  */
-public class Cliente implements ICliente {
+public class Cliente extends Task implements ICliente{
 
 	//------------------------------------------------
 	// Constantes
@@ -45,7 +49,7 @@ public class Cliente implements ICliente {
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "157";
+	private final static String SERV = "157.253.227.167";
 
 	/**
 	 * Puerto servidor con seguridad
@@ -143,6 +147,8 @@ public class Cliente implements ICliente {
 	
 	private long tFalloLllave;
 	
+	private ArrayList<Datos> datos;
+	
 	//-----------------------------------------------
 	// Constructor
 	//-----------------------------------------------
@@ -152,13 +158,13 @@ public class Cliente implements ICliente {
 	 * @param port
 	 * @throws Exception
 	 */
-	public Cliente(int port) {
+	public Cliente(int port, ArrayList<Datos> nDatos) {
 		try{
 
 			socket = new Socket(SERV, port);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
+			datos = nDatos;
 		} catch(Exception e){ 
 			e.printStackTrace();
 			
@@ -435,7 +441,7 @@ public class Cliente implements ICliente {
 		exitosa = true;
 		
 		try{
-			cli = new Cliente(PORT);
+			cli = new Cliente(PORT, new ArrayList<Datos>());
 		}catch(Exception e){
 			e.printStackTrace();
 			exitosa = false;
@@ -590,5 +596,82 @@ public class Cliente implements ICliente {
 
 	public void settFalloLllave(long tFalloLllave) {
 		this.tFalloLllave = tFalloLllave;
+	}
+	
+	public void fail() {
+		System.err.println(Task.MENSAJE_FAIL);
+	}
+
+	@Override
+	public void success() {
+		System.out.println(Task.OK_MESSAGE);	
+	}
+
+	@Override
+	public void execute() {
+		Cliente cli = null;
+		exitosa = true;
+		
+		try{
+			cli = new Cliente(PORT, datos);
+		}catch(Exception e){
+			e.printStackTrace();
+			exitosa = false;
+		}
+
+		//Manejo de diferentes casos de algoritmos
+
+		String algSimetrico ="";
+		String algAsimetrico = "";
+		String algHmac = "";
+		String paddingSim = "";
+
+		try{
+			BufferedReader br = new BufferedReader(new FileReader("data/RC4_RSA_HMACSHA256"));
+
+			algSimetrico = br.readLine().split(":")[1];
+			algAsimetrico = br.readLine().split(":")[1];
+			algHmac = br.readLine().split(":")[1];
+			paddingSim = br.readLine().split(":")[1];
+			br.close();
+
+		} catch(Exception e){ 
+			e.printStackTrace();
+			tFallo = System.currentTimeMillis();
+			exitosa = false;
+			e.printStackTrace();
+
+
+			}
+
+		//comienzo de la comunicacion cliente a servidor
+		
+		cli.establecerConexion();
+
+		boolean algosAceptados = cli.mandarAlgoritmos(algSimetrico, algAsimetrico, algHmac);
+
+		if(!algosAceptados){
+			System.out.println("No se aceptaron los algoritmos");
+			exitosa = false;
+		}
+		else{
+			cli.envioCertificado(algAsimetrico);
+
+			PublicKey llavePublicaServidor = cli.recibirCertificadoServidor();
+
+			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
+
+			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
+		}
+		Datos data = null;
+		boolean exito = cli.darTransaccionExitosa();
+		if(exito){
+			data = new Datos(cli.darTiempoLlaveSesion(), cli.darTimepoTransaccion(), exito);
+		}
+		else{
+			data = new Datos(cli.darTiempoFalloLlave(), cli.darTiempoFallo(), exito);
+		}
+		datos.add(data);
+		
 	}
 }

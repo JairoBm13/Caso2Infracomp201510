@@ -1,4 +1,4 @@
-package caso2;
+package cliente;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,7 +40,7 @@ import uniandes.gload.core.Task;
  * @author Jairo Bautista & Santiago Beltran Caicedo
  *
  */
-public class Cliente extends Task implements ICliente{
+public class ClienteSinS extends Task implements ICliente{
 
 	//------------------------------------------------
 	// Constantes
@@ -49,7 +49,7 @@ public class Cliente extends Task implements ICliente{
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "157.253.227.167";
+	private final static String SERV = "157.253.227.115";
 
 	/**
 	 * Puerto servidor con seguridad
@@ -149,6 +149,9 @@ public class Cliente extends Task implements ICliente{
 	
 	private ArrayList<Datos> datos;
 	
+	static int fallos;
+	
+	
 	//-----------------------------------------------
 	// Constructor
 	//-----------------------------------------------
@@ -158,7 +161,7 @@ public class Cliente extends Task implements ICliente{
 	 * @param port
 	 * @throws Exception
 	 */
-	public Cliente(int port, ArrayList<Datos> nDatos) {
+	public ClienteSinS(int port, ArrayList<Datos> nDatos) {
 		try{
 
 			socket = new Socket(SERV, port);
@@ -177,9 +180,10 @@ public class Cliente extends Task implements ICliente{
 	public boolean establecerConexion() {
 		try {
 			tITransaccion = System.currentTimeMillis();
-			System.out.println("Cliente: " + HOLA);
+//			System.out.println("Cliente: " + HOLA);
 			out.println(HOLA);
-			System.out.println("Servidor: " + in.readLine());
+			in.readLine();
+//			System.out.println("Servidor: " + in.readLine());
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -196,12 +200,12 @@ public class Cliente extends Task implements ICliente{
 	public boolean mandarAlgoritmos(String algos, String algoa, String algod){
 
 		try{
-			System.out.println("Cliente: " + ALGORITMOS+":"+algos+":"+algoa+":"+algod);
+//			System.out.println("Cliente: " + ALGORITMOS+":"+algos+":"+algoa+":"+algod);
 			out.println(ALGORITMOS+":"+algos+":"+algoa+":"+algod);
 
 			String respuesta = in.readLine();
 
-			System.out.println("Servidor: " + respuesta);
+//			System.out.println("Servidor: " + respuesta);
 			String estado = respuesta.split(":")[1];
 
 			if(estado.equals(OK)){return true;}
@@ -267,10 +271,10 @@ public class Cliente extends Task implements ICliente{
 		try {
 			X509Certificate cert = certGen.generate(caKey, "BC"); 
 
-			System.out.println("Cliente: "+CERCLNT);
-			System.out.println("------------------------------------------------------------------");
-			System.out.println(cert.toString());
-			System.out.println("------------------------------------------------------------------");
+//			System.out.println("Cliente: "+CERCLNT);
+//			System.out.println("------------------------------------------------------------------");
+//			System.out.println(cert.toString());
+//			System.out.println("------------------------------------------------------------------");
 
 			return cert;
 		} catch (Exception e) {
@@ -306,16 +310,17 @@ public class Cliente extends Task implements ICliente{
 	 */
 	public PublicKey recibirCertificadoServidor(){
 		try {
-			System.out.println("Servidor: " +  in.readLine());
+//			System.out.println("Servidor: " +  in.readLine());
+			in.readLine();
 			CertificateFactory  cf = CertificateFactory.getInstance("X.509");
 			Certificate certificate = cf.generateCertificate(socket.getInputStream());getClass();
 			
-			System.out.println("------------------------------------------------------------------");
-			System.out.println(certificate.toString());
-			System.out.println("------------------------------------------------------------------");
-
-			System.out.println("Llave publica servidor: " + certificate.getPublicKey());
-			System.out.println();
+//			System.out.println("------------------------------------------------------------------");
+//			System.out.println(certificate.toString());
+//			System.out.println("------------------------------------------------------------------");
+//
+//			System.out.println("Llave publica servidor: " + certificate.getPublicKey());
+//			System.out.println();
 			return certificate.getPublicKey();
 
 		} catch (Exception e) {
@@ -340,7 +345,7 @@ public class Cliente extends Task implements ICliente{
 				llaveSimInit = in.readLine().split(":");
 				tFLlaveSesion = System.currentTimeMillis();
 				
-				System.out.println("Servidor: " + llaveSimInit[0] + ": " + llaveSimInit[1]);
+//				System.out.println("Servidor: " + llaveSimInit[0] + ": " + llaveSimInit[1]);
 				
 				Cipher cipher = Cipher.getInstance(algAsimetrico);
 				cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
@@ -350,7 +355,7 @@ public class Cliente extends Task implements ICliente{
 				byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
 				String llaveSimetrica = new String(decifrado);
 				
-				System.out.println("Llave simetrica: " + llaveSimetrica);
+//				System.out.println("Llave simetrica: " + llaveSimetrica);
 				SecretKey simetrica = new SecretKeySpec(decifrado,0,decifrado.length,algSimetrico);
 				
 				return simetrica;
@@ -392,35 +397,19 @@ public class Cliente extends Task implements ICliente{
 			// ACT1
 			//===================================
 			
-			System.out.println("Posicion Actual: " + ubicacion);
+			out.println(ACT1);
 			
-			Cipher cipher = Cipher.getInstance(paddingSim);
-			cipher.init(Cipher.ENCRYPT_MODE, llaveSim);
-
-			byte[] ubicacionCifrada = cipher.doFinal(ubicacion.getBytes());
-			out.println(ACT1+":"+encapsular(ubicacionCifrada));
-			
-			System.out.println("Cliente: "+ACT1+":"+ encapsular(ubicacionCifrada));
+//			System.out.println("Cliente: "+ACT1+":"+ encapsular(ubicacionCifrada));
 
 			//===================================
 			// ACT2
 			//===================================
 						
-			Mac mac = Mac.getInstance(algHMAC);
-			SecretKey secret = new SecretKeySpec(llaveSim.getEncoded(), algHMAC);
-			mac.init(secret);
-			mac.update(ubicacion.getBytes());
-			byte[] macCoord = mac.doFinal();
+			out.println(ACT2);
 			
-			cipher = Cipher.getInstance(llavePubServidor.getAlgorithm());
-			cipher.init(Cipher.ENCRYPT_MODE, llavePubServidor);
-			byte[] integridad =cipher.doFinal(macCoord);
-			
-			out.println(ACT2+":"+encapsular(integridad));
-			
-			System.out.println("Cliente: "+ACT2+":"+encapsular(integridad));
-			
-			System.out.println("Servidor: " + in.readLine());
+//			System.out.println("Cliente: "+ACT2+":"+encapsular(integridad));
+			in.readLine();
+//			System.out.println("Servidor: " + in.readLine());
 			tFTransaccion = System.currentTimeMillis();
 			return true;
 
@@ -479,7 +468,7 @@ public class Cliente extends Task implements ICliente{
 		boolean algosAceptados = cli.mandarAlgoritmos(algSimetrico, algAsimetrico, algHmac);
 
 		if(!algosAceptados){
-			System.out.println("No se aceptaron los algoritmos");
+//			System.out.println("No se aceptaron los algoritmos");
 			exitosa = false;
 		}
 		else{
@@ -490,8 +479,8 @@ public class Cliente extends Task implements ICliente{
 			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
 
 			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
+			
 		}
-		
 	}
 	
 	public long darTiempoLlaveSesion(){
@@ -551,7 +540,7 @@ public class Cliente extends Task implements ICliente{
 	}
 
 	public static void settILlaveSesion(long tILlaveSesion) {
-		Cliente.tILlaveSesion = tILlaveSesion;
+		ClienteSinS.tILlaveSesion = tILlaveSesion;
 	}
 
 	public static long gettFLlaveSesion() {
@@ -559,7 +548,7 @@ public class Cliente extends Task implements ICliente{
 	}
 
 	public static void settFLlaveSesion(long tFLlaveSesion) {
-		Cliente.tFLlaveSesion = tFLlaveSesion;
+		ClienteSinS.tFLlaveSesion = tFLlaveSesion;
 	}
 
 	public static long gettITransaccion() {
@@ -567,7 +556,7 @@ public class Cliente extends Task implements ICliente{
 	}
 
 	public static void settITransaccion(long tITransaccion) {
-		Cliente.tITransaccion = tITransaccion;
+		ClienteSinS.tITransaccion = tITransaccion;
 	}
 
 	public static long gettFTransaccion() {
@@ -575,11 +564,11 @@ public class Cliente extends Task implements ICliente{
 	}
 
 	public static void settFTransaccion(long tFTransaccion) {
-		Cliente.tFTransaccion = tFTransaccion;
+		ClienteSinS.tFTransaccion = tFTransaccion;
 	}
 
 	public static void setExitosa(boolean exitosa) {
-		Cliente.exitosa = exitosa;
+		ClienteSinS.exitosa = exitosa;
 	}
 
 	public long gettFallo() {
@@ -609,11 +598,11 @@ public class Cliente extends Task implements ICliente{
 
 	@Override
 	public void execute() {
-		Cliente cli = null;
+		ClienteSinS cli = null;
 		exitosa = true;
 		
 		try{
-			cli = new Cliente(PORT, datos);
+			cli = new ClienteSinS(PORT, datos);
 		}catch(Exception e){
 			e.printStackTrace();
 			exitosa = false;
@@ -651,7 +640,7 @@ public class Cliente extends Task implements ICliente{
 		boolean algosAceptados = cli.mandarAlgoritmos(algSimetrico, algAsimetrico, algHmac);
 
 		if(!algosAceptados){
-			System.out.println("No se aceptaron los algoritmos");
+//			System.out.println("No se aceptaron los algoritmos");
 			exitosa = false;
 		}
 		else{
@@ -662,6 +651,7 @@ public class Cliente extends Task implements ICliente{
 			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
 
 			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
+			System.out.println(cli.darTiempoLlaveSesion()+","+cli.darTimepoTransaccion()+","+cli.exitosa);
 		}
 		Datos data = null;
 		boolean exito = cli.darTransaccionExitosa();

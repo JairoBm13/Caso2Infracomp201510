@@ -2,7 +2,7 @@ package Cargador;
 
 import java.util.ArrayList;
 
-import caso2.ClienteSinS;
+import cliente.ClienteSinS;
 import uniandes.gload.core.Task;
 
 public class TaskClienteUnidadSinS extends Task {

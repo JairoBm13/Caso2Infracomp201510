@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import caso2.Cliente;
+import cliente.Cliente;
 //import Cargador.TaskClienteUnidad.Datos;
 import jxl.Workbook;
 import jxl.write.Label;

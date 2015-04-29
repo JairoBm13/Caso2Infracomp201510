@@ -1,4 +1,4 @@
-package caso2;
+package cliente;
 
 import java.io.IOException;
 import java.security.PublicKey;

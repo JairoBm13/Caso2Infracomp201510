@@ -40,7 +40,7 @@ import uniandes.gload.core.Task;
  * @author Jairo Bautista & Santiago Beltran Caicedo
  *
  */
-public class ClienteSinS extends Task implements ICliente{
+public class ClienteSinS extends Task{
 
 	//------------------------------------------------
 	// Constantes
@@ -49,17 +49,17 @@ public class ClienteSinS extends Task implements ICliente{
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "157.253.227.115";
+	private final static String SERV = "157.253.229.68";
 
 	/**
 	 * Puerto servidor con seguridad
 	 */
-	private final static int PORT = 8080;
+	private final static int PORT = 8090;
 
 	/**
 	 * Puerto del servidor sin autenticaciones de seguridad
 	 */
-	private final static int PORTINSEGUR = 80;
+	private final static int PORTINSEGUR = 8090;
 
 	/**
 	 * Cadena de control que indica el inicio de la conversacion
@@ -161,13 +161,13 @@ public class ClienteSinS extends Task implements ICliente{
 	 * @param port
 	 * @throws Exception
 	 */
-	public ClienteSinS(int port, ArrayList<Datos> nDatos) {
+	public ClienteSinS(int port, ArrayList<Datos> arrayList)  {
 		try{
 
-			socket = new Socket(SERV, port);
+			socket = new Socket(SERV, PORTINSEGUR);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			datos = nDatos;
+			datos = arrayList;
 		} catch(Exception e){ 
 			e.printStackTrace();
 			
@@ -224,17 +224,17 @@ public class ClienteSinS extends Task implements ICliente{
 	 * Envia el certificado al servidor por un flujo de bytes
 	 */
 	public byte[] envioCertificado(String algAsim) {
-		X509Certificate certificado = crearCertificado(algAsim);
+//		X509Certificate certificado = crearCertificado(algAsim);
 		byte[] certByte;
 		try {
 
-			certByte = certificado.getEncoded();
+//			certByte = certificado.getEncoded();
 			out.println(CERCLNT);
-			socket.getOutputStream().write(certByte);
+			socket.getOutputStream().write("cosa".getBytes());
 			socket.getOutputStream().flush();	
 			tILlaveSesion = System.currentTimeMillis();
 			
-			return certByte;
+			return "cosa".getBytes();
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -308,27 +308,26 @@ public class ClienteSinS extends Task implements ICliente{
 	 * Se recibe el certificado del servidor
 	 * @return
 	 */
-	public PublicKey recibirCertificadoServidor(){
+	public void recibirCertificadoServidor(){
 		try {
 //			System.out.println("Servidor: " +  in.readLine());
 			in.readLine();
-			CertificateFactory  cf = CertificateFactory.getInstance("X.509");
-			Certificate certificate = cf.generateCertificate(socket.getInputStream());getClass();
-			
+//			CertificateFactory  cf = CertificateFactory.getInstance("X.509");
+//			Certificate certificate = cf.generateCertificate(socket.getInputStream());getClass();
+			in.readLine();
 //			System.out.println("------------------------------------------------------------------");
 //			System.out.println(certificate.toString());
 //			System.out.println("------------------------------------------------------------------");
 //
 //			System.out.println("Llave publica servidor: " + certificate.getPublicKey());
 //			System.out.println();
-			return certificate.getPublicKey();
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			tFallo = System.currentTimeMillis();
 			tFalloLllave = tFallo;
 			exitosa = false;
-			return null;
+			return;
 		}
 	}
 
@@ -388,7 +387,7 @@ public class ClienteSinS extends Task implements ICliente{
 	 * Envia la pocision actualizada al servidor usando la llave simetrica obtenidad anteriormente
 	 * para cifrar dicha pocision.
 	 */
-	public boolean actualizarUbicacion(String algHMAC, String paddingSim, SecretKey llaveSim ,PublicKey llavePubServidor, String ubicacion) {
+	public boolean actualizarUbicacion(String algHMAC, String paddingSim, String ubicacion) {
 
 		try {
 
@@ -602,7 +601,7 @@ public class ClienteSinS extends Task implements ICliente{
 		exitosa = true;
 		
 		try{
-			cli = new ClienteSinS(PORT, datos);
+			cli = new ClienteSinS(PORTINSEGUR, datos);
 		}catch(Exception e){
 			e.printStackTrace();
 			exitosa = false;
@@ -610,28 +609,28 @@ public class ClienteSinS extends Task implements ICliente{
 
 		//Manejo de diferentes casos de algoritmos
 
-		String algSimetrico ="";
-		String algAsimetrico = "";
-		String algHmac = "";
-		String paddingSim = "";
+		String algSimetrico ="RC4";
+		String algAsimetrico = "RSA";
+		String algHmac = "HMACSHA256";
+		String paddingSim = "RC4";
 
-		try{
-			BufferedReader br = new BufferedReader(new FileReader("data/RC4_RSA_HMACSHA256"));
-
-			algSimetrico = br.readLine().split(":")[1];
-			algAsimetrico = br.readLine().split(":")[1];
-			algHmac = br.readLine().split(":")[1];
-			paddingSim = br.readLine().split(":")[1];
-			br.close();
-
-		} catch(Exception e){ 
-			e.printStackTrace();
-			tFallo = System.currentTimeMillis();
-			exitosa = false;
-			e.printStackTrace();
-
-
-			}
+//		try{
+//			BufferedReader br = new BufferedReader(new FileReader("data/RC4_RSA_HMACSHA256"));
+//
+//			algSimetrico = br.readLine().split(":")[1];
+//			algAsimetrico = br.readLine().split(":")[1];
+//			algHmac = br.readLine().split(":")[1];
+//			paddingSim = br.readLine().split(":")[1];
+//			br.close();
+//
+//		} catch(Exception e){ 
+//			e.printStackTrace();
+//			tFallo = System.currentTimeMillis();
+//			exitosa = false;
+//			e.printStackTrace();
+//
+//
+//			}
 
 		//comienzo de la comunicacion cliente a servidor
 		
@@ -646,11 +645,11 @@ public class ClienteSinS extends Task implements ICliente{
 		else{
 			cli.envioCertificado(algAsimetrico);
 
-			PublicKey llavePublicaServidor = cli.recibirCertificadoServidor();
+			cli.recibirCertificadoServidor();
 
-			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
+//			SecretKey llaveSimetrica = cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
 
-			cli.actualizarUbicacion(algHmac, paddingSim, llaveSimetrica, llavePublicaServidor,  "41242028,2104418");
+			cli.actualizarUbicacion(algHmac, paddingSim,  "41242028,2104418");
 			System.out.println(cli.darTiempoLlaveSesion()+","+cli.darTimepoTransaccion()+","+cli.exitosa);
 		}
 		Datos data = null;

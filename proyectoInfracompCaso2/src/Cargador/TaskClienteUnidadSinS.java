@@ -34,7 +34,7 @@ public class TaskClienteUnidadSinS extends Task {
 	public void execute() {
 			
 				try{
-					cliente = new ClienteSinS(90);
+					cliente = new ClienteSinS(90, new ArrayList<Datos>());
 				
 				//Manejo de diferentes casos de algoritmos
 				

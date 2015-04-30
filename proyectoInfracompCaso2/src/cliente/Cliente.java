@@ -49,7 +49,7 @@ public class Cliente extends Task implements ICliente{
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "157.253.227.115";
+	private final static String SERV = "157.253.229.68";
 
 	/**
 	 * Puerto servidor con seguridad

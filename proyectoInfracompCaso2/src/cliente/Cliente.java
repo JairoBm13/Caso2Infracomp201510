@@ -95,7 +95,7 @@ public class Cliente extends Task implements ICliente{
 	/**
 	 * Archivo en donde se escriben los tiempos
 	 */
-	private final static File ARCHIVOS= new File("docs/Seguridad/Carga200/1Thread/medicion10.csv");
+	private final static File ARCHIVOS= new File("docs/Seguridad/Carga400/1Thread/medicion10.csv");
 
 	//-------------------------------------------------
 	// Atributos

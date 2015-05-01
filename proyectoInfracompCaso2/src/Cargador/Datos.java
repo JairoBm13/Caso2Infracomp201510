@@ -6,45 +6,31 @@ public class Datos {
 	private long tiempoRespuesta;
 	private boolean estado;
 	
-	public Datos(long nTLlave, long nTRespuesta, boolean nEstado){
-		tiempoLlave = nTLlave;
-		tiempoRespuesta = nTRespuesta;
-		setEstado(nEstado);
+	public Datos(){
+		estado = true;
 	}
 
-	/**
-	 * @return the tiempoLlave
-	 */
-	public long getTiempoLlave() {
-		return tiempoLlave;
-	}
-
-	/**
-	 * @param tiempoLlave the tiempoLlave to set
-	 */
-	public void setTiempoLlave(long tiempoLlave) {
+	public void setLlaveSesion(long tiempoLlave) {
 		this.tiempoLlave = tiempoLlave;
 	}
 
-	/**
-	 * @return the tiempoRespuesta
-	 */
-	public long getTiempoRespuesta() {
-		return tiempoRespuesta;
+	public void setRespuesta(long tiempoResp) {
+		this.tiempoRespuesta = tiempoResp;
 	}
-
-	/**
-	 * @param tiempoRespuesta the tiempoRespuesta to set
-	 */
-	public void setTiempoRespuesta(long tiempoRespuesta) {
-		this.tiempoRespuesta = tiempoRespuesta;
+	
+	public void setEstado(boolean nestado){
+		estado = nestado;
 	}
-
-	public boolean isEstado() {
+	
+	public boolean getEstado(){
 		return estado;
 	}
-
-	public void setEstado(boolean estado) {
-		this.estado = estado;
+	
+	public long getTLlave(){
+		return tiempoLlave;
+	}
+	
+	public long getTRespuesta(){
+		return tiempoRespuesta;
 	}
 }

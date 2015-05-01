@@ -50,7 +50,7 @@ public class Cliente extends Task implements ICliente{
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "157.253.229.183";
+	private final static String SERV = "192.168.0.11";
 
 	/**
 	 * Puerto servidor con seguridad
@@ -95,7 +95,7 @@ public class Cliente extends Task implements ICliente{
 	/**
 	 * Archivo en donde se escriben los tiempos
 	 */
-	private final static File ARCHIVOS= new File("docs/Seguridad/Carga80/1Thread/medicion10.csv");
+	private final static File ARCHIVOS= new File("docs/Seguridad/Carga200/1Thread/medicion10.csv");
 
 	//-------------------------------------------------
 	// Atributos

@@ -35,7 +35,7 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
-import servidor.Protocolo;
+import Servidor.Protocolo;
 
 /**
  * Clase que contiene metodos static que proveen la seguridad del protocolo.

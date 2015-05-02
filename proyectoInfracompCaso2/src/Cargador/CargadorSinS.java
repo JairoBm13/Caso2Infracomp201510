@@ -29,8 +29,8 @@ public class CargadorSinS {
 	public CargadorSinS(){
 
 		Task tarea = new ClienteSinS(8090);
-		int numberOfTasks = 400;
-		int gapBetweenTask = 20;
+		int numberOfTasks = 80;
+		int gapBetweenTask = 100;
 		cargdor = new LoadGenerator("Carga del servidor desde el cliente", numberOfTasks, tarea, gapBetweenTask);
 		cargdor.generate();
 	}

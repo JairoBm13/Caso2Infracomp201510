@@ -50,7 +50,7 @@ public class ClienteSinS extends Task{
 	/**
 	 * Direccion del servidor a usar.
 	 */
-	private final static String SERV = "157.253.229.68";
+	private final static String SERV = "192.168.0.11";
 
 	/**
 	 * Puerto servidor con seguridad
@@ -95,7 +95,7 @@ public class ClienteSinS extends Task{
 	/**
 	 * Archivo en donde se escriben los tiempos
 	 */
-	private final static File ARCHIVOSS= new File("docs/tiemposSeguridad_1T_400C_1.csv");
+	private final static File ARCHIVOSS= new File("docs/SinSeguridad/Carga80/16Thread/medicion10.csv");
 
 
 	//-------------------------------------------------
@@ -125,22 +125,22 @@ public class ClienteSinS extends Task{
 	/**
 	 * Mide el tiempo de establecimiento de llave de sesion
 	 */
-	private static long tILlaveSesion;
+	private long tILlaveSesion;
 
 	/**
 	 * Mide el tiempo de establecimiento de llave de sesion
 	 */
-	private static long tFLlaveSesion;
+	private long tFLlaveSesion;
 
 	/**
 	 * Mide el tiempo de la transaccion
 	 */
-	private static long tITransaccion;
+	private long tITransaccion;
 
 	/**
 	 * Mide el tiempo de la transaccion
 	 */
-	private static long tFTransaccion;
+	private long tFTransaccion;
 
 	/**
 	 * Indica si la transaccion fue exitosa
@@ -179,8 +179,8 @@ public class ClienteSinS extends Task{
 	 */
 	public boolean establecerConexion() throws Exception {
 
-		tITransaccion = System.currentTimeMillis();
 		out.println(HOLA);
+		tITransaccion = System.currentTimeMillis();
 		in.readLine();
 		return true;
 	}
@@ -231,28 +231,17 @@ public class ClienteSinS extends Task{
 	 */
 	public void recibirCertificadoServidor() throws Exception{
 		in.readLine();
-		in.readLine();
 	}
 
 	/**
 	 * Extrae la llave simetrica enviada por el servidor
 	 * @return
 	 */
-	public SecretKey extraerLlavesimetrica(String algSimetrico, String algAsimetrico) throws Exception{
+	public void extraerLlavesimetrica(String algSimetrico, String algAsimetrico) throws Exception{
 
-		String[] llaveSimInit;
-		llaveSimInit = in.readLine().split(":");
+
+		String llaveSimInit = in.readLine();
 		tFLlaveSesion = System.currentTimeMillis();
-		Cipher cipher = Cipher.getInstance(algAsimetrico);
-		cipher.init(Cipher.DECRYPT_MODE, llavesCliente.getPrivate());
-
-
-		byte[] llaveSimetricaCif = DatatypeConverter.parseHexBinary(llaveSimInit[1]);
-		byte[] decifrado = cipher.doFinal(llaveSimetricaCif);
-		String llaveSimetrica = new String(decifrado);
-		SecretKey simetrica = new SecretKeySpec(decifrado,0,decifrado.length,algSimetrico);
-
-		return simetrica;
 	}
 
 	private String encapsular(byte[] cifrado){
@@ -330,9 +319,13 @@ public class ClienteSinS extends Task{
 			cli.envioCertificado(algAsimetrico);
 
 			cli.recibirCertificadoServidor();
+			cli.extraerLlavesimetrica(algSimetrico, algAsimetrico);
+			cli.getDatos().setLlaveSesion(cli.darTiempoLlaveSesion());
 			cli.actualizarUbicacion(algHmac, paddingSim,  "41242028,2104418");
 
-			System.out.println(cli.darTiempoLlaveSesion()+","+cli.darTimepoTransaccion()+","+cli.exitosa);
+			cli.getDatos().setRespuesta(cli.darTimepoTransaccion());
+			
+			System.out.println(cli.getDatos().getTRespuesta()+ ","+cli.getDatos().getTLlave());
 
 			PrintWriter pW = new PrintWriter(new FileWriter(ARCHIVOSS, true));
 			pW.println(cli.getDatos().getTRespuesta()+ ","+cli.getDatos().getTLlave());

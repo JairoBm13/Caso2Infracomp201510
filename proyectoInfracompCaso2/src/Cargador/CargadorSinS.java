@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import cliente.Cliente;
-import cliente.ClienteSinS;
+import Cliente.Cliente;
+import Cliente.ClienteSinS;
 //import Cargador.TaskClienteUnidad.Datos;
 import jxl.Workbook;
 import jxl.write.Label;

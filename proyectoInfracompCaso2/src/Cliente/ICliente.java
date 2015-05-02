@@ -1,4 +1,4 @@
-package cliente;
+package Cliente;
 
 import java.io.IOException;
 import java.security.PublicKey;
